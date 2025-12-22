@@ -80,8 +80,7 @@ function Section({ title, items, showChapter }) {
 const styles = {
   container: {
     padding: 24,
-    color: "#e5e7eb",
-    background: "#020617",
+    color: "#052b0cff",
     minHeight: "100vh",
   },
   center: {
@@ -90,14 +89,13 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    color: "#e5e7eb",
-    background: "#020617",
+    color: "#1e2d04ff",
     gap: 12,
   },
   section: {
     marginTop: 24,
     padding: 16,
-    background: "#020617",
+    background: "#cc7d39f0",
     border: "1px solid #1e293b",
     borderRadius: 8,
   },
@@ -113,7 +111,7 @@ const styles = {
     borderBottom: "1px solid #1e293b",
   },
   chapter: {
-    color: "#93c5fd",
+    color: "#040544ff",
   },
   empty: {
     color: "#64748b",

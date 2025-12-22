@@ -22,11 +22,11 @@ export default function LoginPage({ onLogin }) {
       setLoading(false);
     }
   };
-
+console.log("LoginPage rendered, login state:" , { username, password, loading, error });
   return (
     <div style={styles.container}>
+      <h1>MangaHub Login</h1>
       <div style={styles.card}>
-        <h2>MangaHub Login</h2>
 
         <input
           style={styles.input}
@@ -63,7 +63,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#0f172a",
+    flexDirection: "column",
+    gap: 16,
   },
   card: {
     width: 320,

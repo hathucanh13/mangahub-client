@@ -13,6 +13,7 @@ type App struct {
 	Auth    *services.AuthService
 	Library *services.LibraryService
 	Notify  *services.NotifyService
+	Manga   *services.MangaService
 }
 
 func NewApp() *App {
@@ -21,6 +22,7 @@ func NewApp() *App {
 		Auth:    services.NewAuthService(base),
 		Library: services.NewLibraryService(base),
 		Notify:  services.NewNotifyService(),
+		Manga:   services.NewMangaService(base),
 	}
 }
 

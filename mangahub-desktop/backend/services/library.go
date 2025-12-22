@@ -41,6 +41,7 @@ func (l *LibraryService) List() (*models.ReadingLists, error) {
 
 	var list models.ReadingLists
 	err = json.NewDecoder(resp.Body).Decode(&list)
+	fmt.Println("Library List:", list)
 	return &list, err
 }
 
@@ -48,6 +49,12 @@ func (l *LibraryService) Add(mangaID, status string, chapter int) error {
 	jwt, _ := utils.LoadToken()
 	if jwt == "" {
 		return fmt.Errorf("not logged in")
+	}
+	if status == "" {
+		status = "plan_to_read"
+	}
+	if chapter < 0 {
+		chapter = 0
 	}
 
 	reqBody := map[string]interface{}{

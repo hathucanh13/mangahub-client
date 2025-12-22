@@ -1,5 +1,35 @@
 export namespace models {
 	
+	export class Manga {
+	    id: string;
+	    title: string;
+	    author: string;
+	    artist: string;
+	    genres: string[];
+	    chapter_count: number;
+	    published_year: number;
+	    status: string;
+	    cover_url: string;
+	    description: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new Manga(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.title = source["title"];
+	        this.author = source["author"];
+	        this.artist = source["artist"];
+	        this.genres = source["genres"];
+	        this.chapter_count = source["chapter_count"];
+	        this.published_year = source["published_year"];
+	        this.status = source["status"];
+	        this.cover_url = source["cover_url"];
+	        this.description = source["description"];
+	    }
+	}
 	export class ReadingEntry {
 	    manga_id: string;
 	    current_chapter: number;

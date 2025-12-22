@@ -29,6 +29,7 @@ func main() {
 			app.Auth,
 			app.Library,
 			app.Notify,
+			app.Manga,
 		},
 	})
 
