@@ -6,12 +6,25 @@ import { EventsOn } from "../wailsjs/runtime/runtime";
 import { showToast } from "./utils/toast";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/Home/page";
+import MangaDetailPage from "./pages/MangaDetail/page";
 import ChatPage from "./pages/Chat/page";
 import "./App.css";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
+  const [selectedMangaId, setSelectedMangaId] = useState(null);
+  const [tab, setTab] = useState("home");
+  const [backgroundMode, setBackgroundMode] = useState("default");
+  const [chatMangaId, setChatMangaId] = useState(null);
+  const [chatMangaName, setChatMangaName] = useState("");
+
   console.log("App rendered, loggedIn:", loggedIn);
+
+  const handleJoinChat = (mangaId, mangaName) => {
+    setChatMangaId(mangaId);
+    setChatMangaName(mangaName);
+    setTab("chat");
+  };
 
   useEffect(() => {
     Start().then(() => {
@@ -25,11 +38,11 @@ function App() {
 
     return off;
   }, []);
-  const [tab, setTab] = useState("home");
+
   if (!loggedIn) {
     return (
       <div className="app-root">
-        <div className="app-background" />
+        <div className="app-background" data-mode={backgroundMode} />
         <LoginPage onLogin={() => setLoggedIn(true)} />
       </div>
     );
@@ -37,12 +50,34 @@ function App() {
 
   return (
     <div className="app-root">
-      <div className="app-background" />
+      {/* ✅ Added data-mode={backgroundMode} */}
+      <div className="app-background" data-mode={backgroundMode} />
       <div className="app-content">
         <Navbar current={tab} onChange={setTab} />
-        {tab === "home" && <HomePage />}
+
+        {tab === "home" && !selectedMangaId && (
+          <HomePage
+            onSelectManga={setSelectedMangaId}
+            setBackgroundMode={setBackgroundMode}
+          />
+        )}
+
+        {tab === "home" && selectedMangaId && (
+          <MangaDetailPage
+            mangaId={selectedMangaId}
+            onBack={() => setSelectedMangaId(null)}
+            setBackgroundMode={setBackgroundMode}
+            onJoinChat={handleJoinChat}
+          />
+        )}
+
         {tab === "library" && <LibraryPage />}
-        {tab === "chat" && <ChatPage />}
+        {tab === "chat" && (
+          <ChatPage
+            initialMangaId={chatMangaId}
+            initialMangaName={chatMangaName}
+          />
+        )}
       </div>
     </div>
   );

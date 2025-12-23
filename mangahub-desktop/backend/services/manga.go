@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"mangahub-desktop/backend/models"
 )
@@ -17,12 +18,34 @@ func NewMangaService(baseURL string) *MangaService {
 	return &MangaService{BaseURL: baseURL}
 }
 
-func (l *MangaService) ListAllMangas(mangaID string) ([]models.Manga, error) {
+func (l *MangaService) ListMangas(
+	page int,
+	pageSize int,
+	genres []string,
+) (*models.PaginatedMangasResponse, error) {
+
 	var url string
 
-	url = l.BaseURL + "/manga"
+	switch {
+	case len(genres) > 0:
+		joined := strings.Join(genres, ",")
+		url = fmt.Sprintf(
+			"%s/manga/filter/genre?query=%s&page=%d&page_size=%d",
+			l.BaseURL,
+			joined,
+			page,
+			pageSize,
+		)
+	default:
+		url = fmt.Sprintf(
+			"%s/manga?page=%d&page_size=%d",
+			l.BaseURL,
+			page,
+			pageSize,
+		)
+	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -33,79 +56,54 @@ func (l *MangaService) ListAllMangas(mangaID string) ([]models.Manga, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("failed %s: %s", resp.Status, string(body))
 	}
 
-	if mangaID != "" {
-		var m interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
-			return nil, err
-		}
-
-		raw, err := json.Marshal(m)
-		if err != nil {
-			return nil, err
-		}
-		fmt.Println(string(raw))
-		return nil, nil
+	var response models.PaginatedMangasResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
 	}
 
+	return &response, nil
+}
+
+func (l *MangaService) ListMangaDetail(id string) (*models.Manga, error) {
+	url := fmt.Sprintf("%s/manga/%s", l.BaseURL, id)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to load manga detail: %s", string(body))
+	}
+
+	var manga models.Manga
+	if err := json.NewDecoder(resp.Body).Decode(&manga); err != nil {
+		return nil, err
+	}
+
+	return &manga, nil
+}
+func (l *MangaService) SearchMangas(query string) ([]models.Manga, error) {
+	url := fmt.Sprintf("%s/manga/search?query=%s", l.BaseURL, query)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("search failed: %s", string(body))
+	}
 	var mangas []models.Manga
 	if err := json.NewDecoder(resp.Body).Decode(&mangas); err != nil {
 		return nil, err
 	}
-
-	fmt.Println("📚 Manga List:")
-	if len(mangas) == 0 {
-		fmt.Println("No manga found.")
-		return nil, nil
-	}
-
-	for _, m := range mangas {
-		fmt.Printf(" - %s (%s)\n", m.Title, m.ID)
-	}
-
 	return mangas, nil
 }
-
-// func (l *LibraryService) Add(mangaID, status string, chapter int) error {
-// 	jwt, _ := utils.LoadToken()
-// 	if jwt == "" {
-// 		return fmt.Errorf("not logged in")
-// 	}
-
-// 	reqBody := map[string]interface{}{
-// 		"manga_id": mangaID,
-// 		"status":   status,
-// 	}
-
-// 	if chapter > 0 {
-// 		reqBody["current_chapter"] = chapter
-// 	}
-
-// 	body, _ := json.Marshal(reqBody)
-
-// 	req, _ := http.NewRequest(
-// 		"POST",
-// 		l.BaseURL+"/users/library",
-// 		bytes.NewBuffer(body),
-// 	)
-
-// 	req.Header.Set("Authorization", "Bearer "+jwt)
-// 	req.Header.Set("Content-Type", "application/json")
-
-// 	resp, err := http.DefaultClient.Do(req)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer resp.Body.Close()
-
-// 	if resp.StatusCode >= 300 {
-// 		b, _ := io.ReadAll(resp.Body)
-// 		return fmt.Errorf(string(b))
-// 	}
-
-// 	return nil
-// }

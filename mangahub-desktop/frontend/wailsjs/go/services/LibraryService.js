@@ -6,6 +6,14 @@ export function Add(arg1, arg2, arg3) {
   return window['go']['services']['LibraryService']['Add'](arg1, arg2, arg3);
 }
 
-export function List() {
-  return window['go']['services']['LibraryService']['List']();
+export function List(arg1) {
+  return window['go']['services']['LibraryService']['List'](arg1);
+}
+
+export function Remove(arg1) {
+  return window['go']['services']['LibraryService']['Remove'](arg1);
+}
+
+export function Update(arg1, arg2) {
+  return window['go']['services']['LibraryService']['Update'](arg1, arg2);
 }
