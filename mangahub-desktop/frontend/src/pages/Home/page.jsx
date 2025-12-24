@@ -93,23 +93,9 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
 
     try {
       const data = await ListMangas(page, allMangas.page_size, selectedGenres);
-      setAllMangas(data);
-      setPage(page);
-      saveToCache(page, selectedGenres, data);
-    } catch (err) {
-      setError(err?.message || "Failed to load manga");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      const results = await SearchMangas(searchQuery);
-      if (results === undefined || results === null) {
+      
+      // Handle null or undefined response
+    if (!data.items || data.items === null || data.items === undefined || data.items.length === 0) {
         setError("No manga found for the given search query.");
         setAllMangas({
           items: [],
@@ -120,6 +106,64 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
         });
         return;
       }
+
+      // Handle empty items array
+      // if (!data.items || data.items.length === 0) {
+      //   setError("No manga found for the selected genres.");
+      //   setAllMangas({
+      //     items: [],
+      //     page: 1,
+      //     page_size: 20,
+      //     total_pages: 0,
+      //     total_items: 0,
+      //   });
+      //   setLoading(false);
+      //   return;
+      // }
+
+      // Success - save data
+      setAllMangas(data);
+      setPage(page);
+      saveToCache(page, selectedGenres, data);
+    } catch (err) {
+      setError(err?.message || "Failed to load manga");
+      setAllMangas({
+        items: [],
+        page: 1,
+        page_size: 20,
+        total_pages: 0,
+        total_items: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    
+    if (!searchQuery || searchQuery.trim() === "") {
+      loadMangas(1);
+      return;
+    }
+    
+    try {
+      const results = await SearchMangas(searchQuery);
+      
+      if (!results || results === null || results === undefined || results.length === 0) {
+        setError("No manga found for the given search query.");
+        setAllMangas({
+          items: [],
+          page: 1,
+          page_size: 0,
+          total_pages: 0,
+          total_items: 0,
+        });
+        return;
+      }
+      
       setAllMangas({
         items: results,
         page: 1,
@@ -129,17 +173,24 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
       });
     } catch (err) {
       setError(err?.message || "Search failed");
+      setAllMangas({
+        items: [],
+        page: 1,
+        page_size: 0,
+        total_pages: 0,
+        total_items: 0,
+      });
     } finally {
       setLoading(false);
     }
   };
+
   const updatePage = (newPage) => {
     loadMangas(newPage);
   };
 
-  const pagedMangas = allMangas.items;
-
-  const totalPages = allMangas.total_pages;
+  const pagedMangas = allMangas?.items || [];
+  const totalPages = allMangas?.total_pages || 0;
 
   if (loading) {
     return (
@@ -154,8 +205,16 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
       <div style={styles.error}>
         <div style={styles.errorBox}>
           <div style={styles.errorText}>{error}</div>
-          <button style={styles.errorButton} onClick={() => loadMangas(page)}>
-            Return
+          <button
+            style={styles.errorButton}
+            onClick={() => {
+              setError(null);
+              setSelectedGenres([]);
+              setSearchQuery("");
+              loadMangas(1);
+            }}
+          >
+            Clear Filters & Retry
           </button>
         </div>
       </div>
@@ -211,37 +270,62 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
         </div>
       </div>
 
-      <div style={styles.grid}>
-        {pagedMangas.map((m) => (
-          <MangaCard key={m.id} manga={m} onClick={() => onSelectManga(m.id)} />
-        ))}
-      </div>
-
-      <div style={styles.pagination}>
-        <button
-          disabled={page === 1}
-          onClick={() => updatePage(page - 1)}
-          style={{
-            ...styles.paginationBtn,
-            ...(page === 1 ? styles.paginationBtnDisabled : {}),
-          }}
-        >
-          ← Prev
-        </button>
-        <div style={styles.pageIndicator}>
-          Page {page} of {totalPages}
+      {pagedMangas.length === 0 ? (
+        <div style={styles.emptyState}>
+          <div style={styles.emptyIcon}>📚</div>
+          <div style={styles.emptyText}>No manga found</div>
+          <button
+            style={styles.clearButton}
+            onClick={() => {
+              setSelectedGenres([]);
+              setSearchQuery("");
+              loadMangas(1);
+            }}
+          >
+            Clear All Filters
+          </button>
         </div>
-        <button
-          disabled={page === totalPages}
-          onClick={() => updatePage(page + 1)}
-          style={{
-            ...styles.paginationBtn,
-            ...(page === totalPages ? styles.paginationBtnDisabled : {}),
-          }}
-        >
-          Next →
-        </button>
-      </div>
+      ) : (
+        <>
+          <div style={styles.grid}>
+            {pagedMangas.map((m) => (
+              <MangaCard
+                key={m.id}
+                manga={m}
+                onClick={() => onSelectManga(m.id)}
+              />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div style={styles.pagination}>
+              <button
+                disabled={page === 1}
+                onClick={() => updatePage(page - 1)}
+                style={{
+                  ...styles.paginationBtn,
+                  ...(page === 1 ? styles.paginationBtnDisabled : {}),
+                }}
+              >
+                ← Prev
+              </button>
+              <div style={styles.pageIndicator}>
+                Page {page} of {totalPages}
+              </div>
+              <button
+                disabled={page === totalPages}
+                onClick={() => updatePage(page + 1)}
+                style={{
+                  ...styles.paginationBtn,
+                  ...(page === totalPages ? styles.paginationBtnDisabled : {}),
+                }}
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -400,6 +484,39 @@ const styles = {
       "0 8px 32px rgba(255, 182, 185, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.9)",
   },
 
+  emptyState: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "60px 20px",
+    gap: 16,
+  },
+
+  emptyIcon: {
+    fontSize: 64,
+    opacity: 0.5,
+  },
+
+  emptyText: {
+    color: "#ff8ba7",
+    fontSize: 18,
+    fontWeight: 600,
+  },
+
+  clearButton: {
+    padding: "12px 28px",
+    borderRadius: 50,
+    border: "2px solid rgba(255, 182, 185, 0.4)",
+    background: "linear-gradient(135deg, #ffc9a0 0%, #ffb6b9 100%)",
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: "pointer",
+    marginTop: 8,
+    boxShadow: "0 6px 20px rgba(255, 201, 160, 0.4)",
+  },
+
   error: {
     position: "fixed",
     inset: 0,
@@ -407,9 +524,6 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    // background:
-    //   "linear-gradient(135deg, rgba(255, 154, 158, 0.95) 0%, rgba(250, 208, 196, 0.95) 100%)",
-    // backdropFilter: "blur(10px)",
   },
 
   errorBox: {

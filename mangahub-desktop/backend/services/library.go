@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 
 	"mangahub-desktop/backend/models"
 	"mangahub-desktop/backend/utils"
@@ -34,6 +36,74 @@ func authRequest(method, url string, body io.Reader) (*http.Request, error) {
 	req.Header.Set("Authorization", "Bearer "+jwt)
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil
+}
+
+type ProgressUpdateRequest struct {
+	MangaID        string  `json:"manga_id"`
+	CurrentChapter int     `json:"current_chapter"`
+	Volume         *int    `json:"volume,omitempty"`
+	Notes          *string `json:"notes,omitempty"`
+	Force          bool    `json:"force"`
+}
+
+type ProgressUpdateResponse struct {
+	MangaTitle        string    `json:"manga_title"`
+	PreviousChapter   int       `json:"previous_chapter"`
+	CurrentChapter    int       `json:"current_chapter"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	DevicesSynced     int       `json:"devices_synced"`
+	TotalChaptersRead int       `json:"total_chapters_read"`
+	ReadingStreak     int       `json:"reading_streak"`
+	NextChapter       int       `json:"next_chapter"`
+}
+
+func (l *LibraryService) UpdateProgress(mangaID string, chapter int, volume *int, notes *string, force bool) (*ProgressUpdateResponse, error) {
+	// jwt := s.config.GetToken()
+	// if jwt == "" {
+	//     return nil, fmt.Errorf("not authenticated")
+	// }
+
+	reqBody := ProgressUpdateRequest{
+		MangaID:        mangaID,
+		CurrentChapter: chapter,
+		Volume:         volume,
+		Notes:          notes,
+		Force:          force,
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := authRequest(
+		"PATCH",
+		l.BaseURL+"/users/progress",
+		bytes.NewBuffer(body),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		errBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("progress update failed: %s", strings.TrimSpace(string(errBody)))
+	}
+
+	var result ProgressUpdateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // LIST
@@ -181,4 +251,115 @@ func (l *LibraryService) Remove(mangaID string) error {
 	}
 
 	return nil
+}
+
+func (l *LibraryService) SyncProgress() error {
+	jwt, err := utils.LoadToken()
+	if err != nil || jwt == "" {
+		return fmt.Errorf("not authenticated")
+	}
+
+	url := l.BaseURL + "/users/progress/sync"
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+jwt)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("sync failed: %s", string(body))
+	}
+
+	return nil
+}
+
+// GetSyncStatus checks the current sync status
+func (l *LibraryService) GetSyncStatus() (map[string]string, error) {
+	jwt, err := utils.LoadToken()
+	if err != nil || jwt == "" {
+		return nil, fmt.Errorf("not authenticated")
+	}
+
+	url := l.BaseURL + "/users/progress/sync-status"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+jwt)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed: %s", string(body))
+	}
+
+	var result map[string]string
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+type ProgressHistoryItem struct {
+	MangaID string `json:"manga_id"`
+	Chapter int    `json:"chapter"`
+	Date    string `json:"date_read"`
+}
+
+type ProgressHistory struct {
+	UserID  int64                 `json:"user_id"`
+	History []ProgressHistoryItem `json:"history"`
+}
+
+// GetProgressHistory fetches reading progress history
+func (l *LibraryService) GetProgressHistory(mangaID string) (*ProgressHistory, error) {
+	jwt, err := utils.LoadToken()
+	if err != nil || jwt == "" {
+		return nil, fmt.Errorf("not authenticated")
+	}
+
+	url := l.BaseURL + "/users/progress/history"
+	fmt.Println("URL:", url)
+	if mangaID != "" {
+		url += "?manga_id=" + mangaID
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+jwt)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed: %s", string(body))
+	}
+
+	var result ProgressHistory
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

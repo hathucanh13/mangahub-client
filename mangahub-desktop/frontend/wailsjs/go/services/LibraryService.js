@@ -6,6 +6,14 @@ export function Add(arg1, arg2, arg3) {
   return window['go']['services']['LibraryService']['Add'](arg1, arg2, arg3);
 }
 
+export function GetProgressHistory(arg1) {
+  return window['go']['services']['LibraryService']['GetProgressHistory'](arg1);
+}
+
+export function GetSyncStatus() {
+  return window['go']['services']['LibraryService']['GetSyncStatus']();
+}
+
 export function List(arg1) {
   return window['go']['services']['LibraryService']['List'](arg1);
 }
@@ -14,6 +22,14 @@ export function Remove(arg1) {
   return window['go']['services']['LibraryService']['Remove'](arg1);
 }
 
+export function SyncProgress() {
+  return window['go']['services']['LibraryService']['SyncProgress']();
+}
+
 export function Update(arg1, arg2) {
   return window['go']['services']['LibraryService']['Update'](arg1, arg2);
+}
+
+export function UpdateProgress(arg1, arg2, arg3, arg4, arg5) {
+  return window['go']['services']['LibraryService']['UpdateProgress'](arg1, arg2, arg3, arg4, arg5);
 }

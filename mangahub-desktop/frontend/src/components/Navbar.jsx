@@ -39,6 +39,17 @@ export default function Navbar({ current, onChange }) {
         >
           <span style={styles.btnText}>Chat Room</span>
         </button>
+
+        <button
+          onClick={() => onChange("internal")}
+          style={
+            current === "internal"
+              ? { ...styles.btn, ...styles.active }
+              : styles.btn
+          }
+        >
+          <span style={styles.btnText}>Internal Service</span>
+        </button>
       </div>
     </div>
   );

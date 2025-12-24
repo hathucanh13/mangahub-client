@@ -146,3 +146,116 @@ export namespace models {
 
 }
 
+export namespace services {
+	
+	export class ProgressHistoryItem {
+	    manga_id: string;
+	    chapter: number;
+	    date_read: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ProgressHistoryItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.manga_id = source["manga_id"];
+	        this.chapter = source["chapter"];
+	        this.date_read = source["date_read"];
+	    }
+	}
+	export class ProgressHistory {
+	    user_id: number;
+	    history: ProgressHistoryItem[];
+	
+	    static createFrom(source: any = {}) {
+	        return new ProgressHistory(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.user_id = source["user_id"];
+	        this.history = this.convertValues(source["history"], ProgressHistoryItem);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
+	export class ProgressUpdateResponse {
+	    manga_title: string;
+	    previous_chapter: number;
+	    current_chapter: number;
+	    // Go type: time
+	    updated_at: any;
+	    devices_synced: number;
+	    total_chapters_read: number;
+	    reading_streak: number;
+	    next_chapter: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ProgressUpdateResponse(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.manga_title = source["manga_title"];
+	        this.previous_chapter = source["previous_chapter"];
+	        this.current_chapter = source["current_chapter"];
+	        this.updated_at = this.convertValues(source["updated_at"], null);
+	        this.devices_synced = source["devices_synced"];
+	        this.total_chapters_read = source["total_chapters_read"];
+	        this.reading_streak = source["reading_streak"];
+	        this.next_chapter = source["next_chapter"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class SearchResult {
+	    results: any[];
+	    total: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new SearchResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.results = source["results"];
+	        this.total = source["total"];
+	    }
+	}
+
+}
+

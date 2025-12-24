@@ -22,8 +22,8 @@ export function SendMessage(arg1) {
   return window['go']['services']['ChatService']['SendMessage'](arg1);
 }
 
-export function Startup(arg1) {
-  return window['go']['services']['ChatService']['Startup'](arg1);
+export function SetContext(arg1) {
+  return window['go']['services']['ChatService']['SetContext'](arg1);
 }
 
 export function SwitchRoom(arg1) {

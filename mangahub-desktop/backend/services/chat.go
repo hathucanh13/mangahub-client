@@ -45,7 +45,7 @@ func NewChatService() *ChatService {
 	return &ChatService{}
 }
 
-func (c *ChatService) Startup(ctx context.Context) {
+func (c *ChatService) SetContext(ctx context.Context) {
 	c.ctx = ctx
 }
 

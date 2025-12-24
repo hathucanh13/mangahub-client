@@ -16,16 +16,23 @@ type App struct {
 	Notify  *services.NotifyService
 	Manga   *services.MangaService
 	Chat    *services.ChatService
+	Sync    *services.SyncService
+	GRPC    *services.GRPCService
 }
 
 func NewApp() *App {
 	base := "http://localhost:8080"
+	syncService := services.NewSyncService()
+
 	return &App{
 		Auth:    services.NewAuthService(base),
 		Library: services.NewLibraryService(base),
-		Notify:  services.NewNotifyService(),
 		Manga:   services.NewMangaService(base),
 		Chat:    services.NewChatService(),
+		Sync:    syncService,
+		GRPC:    services.NewGRPCService(),
+		// Pass syncService to NotifyService so it can auto-start TCP
+		Notify: services.NewNotifyService(syncService),
 	}
 }
 
@@ -35,10 +42,13 @@ func (a *App) startup(ctx context.Context) {
 		log.Printf("Failed to initialize logger: %v", err)
 	}
 
-	// Forward ctx to services
-	a.Notify.Startup(ctx)
-	a.Chat.Startup(ctx)
-	log.Println("NotifyService ctx forwarded")
+	// Set context for ALL services FIRST before any Start() calls
+	a.ctx = ctx
+	a.Notify.SetContext(ctx)
+	a.Chat.SetContext(ctx)
+	a.Sync.SetContext(ctx)
+
+	log.Println("All service contexts initialized")
 	utils.LogInfo("App started successfully")
 }
 
