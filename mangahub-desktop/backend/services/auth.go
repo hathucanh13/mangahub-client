@@ -97,3 +97,17 @@ func (a *AuthService) GetCurrentUsername() (string, error) {
 
 	return claims.Username, nil
 }
+
+func (a *AuthService) IsAdmin() (bool, error) {
+	token, err := utils.LoadToken()
+	if err != nil {
+		return false, err
+	}
+
+	claims, err := utils.ValidateToken(token)
+	if err != nil {
+		return false, err
+	}
+
+	return claims.Role == "admin", nil
+}

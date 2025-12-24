@@ -232,31 +232,39 @@ func StartUDPServer(username string) error {
 func StartUDPListenerWithHandler(
 	port int,
 	onNotification func(Notification),
-) error {
+) (*net.UDPConn, error) {
 
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	fmt.Printf("UDP Listener started on port %d\n", port)
 
 	buffer := make([]byte, 2048)
 
-	for {
-		n, _, err := conn.ReadFromUDP(buffer)
-		if err != nil {
-			continue
-		}
+	go func() {
+		defer conn.Close()
+		for {
+			n, _, err := conn.ReadFromUDP(buffer)
+			if err != nil {
+				// Connection closed or error
+				return
+			}
 
-		var notif Notification
-		if err := json.Unmarshal(buffer[:n], &notif); err != nil {
-			continue
-		}
+			var notif Notification
+			if err := json.Unmarshal(buffer[:n], &notif); err != nil {
+				continue
+			}
 
-		onNotification(notif)
-	}
+			onNotification(notif)
+		}
+	}()
+
+	return conn, nil
 }

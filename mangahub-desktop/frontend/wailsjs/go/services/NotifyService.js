@@ -10,6 +10,10 @@ export function Start() {
   return window['go']['services']['NotifyService']['Start']();
 }
 
+export function Stop() {
+  return window['go']['services']['NotifyService']['Stop']();
+}
+
 export function Subscribe(arg1) {
   return window['go']['services']['NotifyService']['Subscribe'](arg1);
 }

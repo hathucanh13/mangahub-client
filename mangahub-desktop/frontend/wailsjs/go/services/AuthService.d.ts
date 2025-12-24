@@ -3,6 +3,8 @@
 
 export function GetCurrentUsername():Promise<string>;
 
+export function IsAdmin():Promise<boolean>;
+
 export function Login(arg1:string,arg2:string):Promise<void>;
 
 export function Logout():Promise<void>;

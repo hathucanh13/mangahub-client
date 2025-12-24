@@ -12,6 +12,8 @@ export function IsConnected():Promise<boolean>;
 
 export function SendMessage(arg1:string):Promise<void>;
 
+export function SetBaseURL(arg1:string):Promise<void>;
+
 export function SetContext(arg1:context.Context):Promise<void>;
 
 export function SwitchRoom(arg1:string):Promise<void>;

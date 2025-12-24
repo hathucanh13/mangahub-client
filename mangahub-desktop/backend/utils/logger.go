@@ -18,7 +18,7 @@ func InitLogger() error {
 	}
 
 	// Create logs directory in user's home
-	logDir := filepath.Join(homeDir, "mangahub-logs")
+	logDir := filepath.Join(homeDir, ".mangahub-desktop", "logs")
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return err
 	}

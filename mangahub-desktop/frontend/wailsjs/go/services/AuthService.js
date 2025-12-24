@@ -6,6 +6,10 @@ export function GetCurrentUsername() {
   return window['go']['services']['AuthService']['GetCurrentUsername']();
 }
 
+export function IsAdmin() {
+  return window['go']['services']['AuthService']['IsAdmin']();
+}
+
 export function Login(arg1, arg2) {
   return window['go']['services']['AuthService']['Login'](arg1, arg2);
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"time"
 
 	"mangahub-desktop/backend/udpclient"
@@ -15,6 +16,7 @@ import (
 type NotifyService struct {
 	ctx         context.Context
 	syncService *SyncService
+	udpConn     *net.UDPConn
 }
 
 func NewNotifyService(syncService *SyncService) *NotifyService {
@@ -47,9 +49,14 @@ func (n *NotifyService) Start() error {
 
 	// 👂 Start UDP listener (background)
 	go func() {
-		udpclient.StartUDPListenerWithHandler(3002, func(noti udpclient.Notification) {
+		conn, err := udpclient.StartUDPListenerWithHandler(3002, func(noti udpclient.Notification) {
 			runtime.EventsEmit(n.ctx, "notify:manga", noti)
 		})
+		if err != nil {
+			log.Printf("UDP listener error: %v", err)
+			return
+		}
+		n.udpConn = conn
 	}()
 
 	log.Println("NotifyService started, ctx ready:", n.ctx != nil)
@@ -78,4 +85,12 @@ func (n *NotifyService) Subscribe(mangaID string) error {
 	addr, _ := utils.LoadUDPServerAddr()
 
 	return udpclient.SubscribeMangaUDP(addr, jwt, mangaID)
+}
+
+// Stop closes the UDP listener connection
+func (n *NotifyService) Stop() {
+	if n.udpConn != nil {
+		n.udpConn.Close()
+		log.Println("UDP listener closed")
+	}
 }

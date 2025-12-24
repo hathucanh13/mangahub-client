@@ -22,6 +22,10 @@ export function SendMessage(arg1) {
   return window['go']['services']['ChatService']['SendMessage'](arg1);
 }
 
+export function SetBaseURL(arg1) {
+  return window['go']['services']['ChatService']['SetBaseURL'](arg1);
+}
+
 export function SetContext(arg1) {
   return window['go']['services']['ChatService']['SetContext'](arg1);
 }

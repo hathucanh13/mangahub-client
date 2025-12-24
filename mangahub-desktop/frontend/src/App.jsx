@@ -10,6 +10,7 @@ import HomePage from "./pages/Home/page";
 import MangaDetailPage from "./pages/MangaDetail/page";
 import ChatPage from "./pages/Chat/page";
 import InternalServicePage from "./pages/InternalService/page";
+import AdminPage from "./pages/Admin/page";
 import "./App.css";
 
 function App() {
@@ -31,6 +32,12 @@ function App() {
     setChatMangaId(mangaId);
     setChatMangaName(mangaName);
     setTab("chat");
+  };
+
+  const handleLogout = () => {
+    setLoggedIn(false);
+    setTab("home");
+    showToast("👋 Logged out successfully");
   };
 
   useEffect(() => {
@@ -97,7 +104,7 @@ function App() {
     <div className="app-root">
       <div className="app-background" data-mode={backgroundMode} />
       <div className="app-content">
-        <Navbar current={tab} onChange={setTab} />
+        <Navbar current={tab} onChange={setTab} onLogout={handleLogout} />
 
         {tab === "home" && !selectedMangaId && (
           <HomePage
@@ -130,6 +137,8 @@ function App() {
         )}
 
         {tab === "internal" && <InternalServicePage />}
+
+        {tab === "admin" && <AdminPage />}
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const GENRES = ["shounen", "seinen", "comedy", "romance"];
+  const GENRES = ["shounen", "seinen", "comedy", "romance", "action", "fantasy", "drama", "horror", "sci-fi"];
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   useEffect(() => {

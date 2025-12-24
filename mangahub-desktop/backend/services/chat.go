@@ -41,12 +41,22 @@ type ChatService struct {
 	isConnecting bool
 }
 
-func NewChatService() *ChatService {
-	return &ChatService{}
+func NewChatService(wsBaseURL string) *ChatService {
+	return &ChatService{
+		wsBaseURL: wsBaseURL,
+	}
 }
 
 func (c *ChatService) SetContext(ctx context.Context) {
 	c.ctx = ctx
+}
+
+// SetBaseURL updates the WebSocket base URL
+func (c *ChatService) SetBaseURL(wsBaseURL string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.wsBaseURL = wsBaseURL
+	utils.LogInfo(fmt.Sprintf("✅ Chat service updated to use: %s", wsBaseURL))
 }
 
 // GetCurrentRoom returns the currently connected room ID
@@ -65,6 +75,11 @@ func (c *ChatService) IsConnected() bool {
 
 func (c *ChatService) Connect(wsBaseURL string, room string) error {
 	c.mu.Lock()
+
+	// Use stored wsBaseURL if empty string is passed
+	if wsBaseURL == "" {
+		wsBaseURL = c.wsBaseURL
+	}
 
 	// Prevent concurrent connection attempts
 	if c.isConnecting {

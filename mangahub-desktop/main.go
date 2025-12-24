@@ -35,6 +35,7 @@ func main() {
 			app.Chat,
 			app.Sync,
 			app.GRPC,
+			app.Admin,
 		},
 	})
 

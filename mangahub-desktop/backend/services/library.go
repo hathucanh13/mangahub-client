@@ -62,7 +62,6 @@ func (l *LibraryService) UpdateProgress(mangaID string, chapter int, volume *int
 	// if jwt == "" {
 	//     return nil, fmt.Errorf("not authenticated")
 	// }
-
 	reqBody := ProgressUpdateRequest{
 		MangaID:        mangaID,
 		CurrentChapter: chapter,

@@ -126,7 +126,8 @@ export default function ChatPage({ initialMangaId, initialMangaName }) {
       if (currentRoom) {
         await SwitchRoom(`${mangaId}`);
       } else {
-        await Connect("ws://localhost:8080", `${mangaId}`);
+        // Pass empty string to use the server-discovered WebSocket URL
+        await Connect("", `${mangaId}`);
       }
       setCurrentRoom(`${mangaId}`);
     } catch (err) {

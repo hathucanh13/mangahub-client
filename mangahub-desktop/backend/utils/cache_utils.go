@@ -11,7 +11,7 @@ func configDir() string {
 	if err != nil {
 		home = "."
 	}
-	return filepath.Join(home, ".mangahub")
+	return filepath.Join(home, ".mangahub-desktop")
 }
 func SaveUDPServerAddr(addr string) error {
 	return os.WriteFile(

@@ -6,4 +6,6 @@ export function SetContext(arg1:context.Context):Promise<void>;
 
 export function Start():Promise<void>;
 
+export function Stop():Promise<void>;
+
 export function Subscribe(arg1:string):Promise<void>;
