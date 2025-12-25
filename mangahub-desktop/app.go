@@ -43,32 +43,6 @@ func NewApp() *App {
 	}
 }
 
-// InitializeServices discovers the server and updates all service base URLs
-func (a *App) InitializeServices() error {
-	log.Println("🔍 Discovering server via UDP...")
-
-	// Try to discover server IP
-	serverIP, err := a.DiscoverServer()
-	if err != nil {
-		log.Printf("⚠️ Server discovery failed, using localhost: %v", err)
-		serverIP = "localhost"
-	}
-
-	log.Printf("✅ Using server IP: %s", serverIP)
-
-	// Update all HTTP services' BaseURL with discovered IP
-	httpBaseURL := fmt.Sprintf("http://%s:8080", serverIP)
-	wsBaseURL := fmt.Sprintf("ws://%s:8080", serverIP)
-
-	a.Auth.BaseURL = httpBaseURL
-	a.Library.BaseURL = httpBaseURL
-	a.Manga.BaseURL = httpBaseURL
-	a.Admin.BaseURL = httpBaseURL
-	a.Chat.SetBaseURL(wsBaseURL)
-
-	return nil
-}
-
 // DiscoverServer discovers the MangaHub server via UDP broadcast
 func (a *App) DiscoverServer() (string, error) {
 	serverAddr, err := udpclient.DiscoverUDPServer(3 * time.Second)
@@ -101,11 +75,6 @@ func (a *App) startup(ctx context.Context) {
 	a.Notify.SetContext(ctx)
 	a.Chat.SetContext(ctx)
 	a.Sync.SetContext(ctx)
-
-	// Discover server and initialize services with correct IP
-	if err := a.InitializeServices(); err != nil {
-		log.Printf("Failed to initialize services: %v", err)
-	}
 
 	log.Println("All service contexts initialized")
 	utils.LogInfo("App started successfully")
