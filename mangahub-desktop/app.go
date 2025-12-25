@@ -25,7 +25,7 @@ type App struct {
 }
 
 func NewApp() *App {
-	// Initialize with placeholder, will be updated after server discovery
+	// Initialize with your base URL - all HTTP services will use this
 	base := "https://eb30ef8789b1.ngrok-free.app"
 
 	syncService := services.NewSyncService()
@@ -34,11 +34,11 @@ func NewApp() *App {
 		Auth:    services.NewAuthService(base),
 		Library: services.NewLibraryService(base),
 		Manga:   services.NewMangaService(base),
-		Chat:    services.NewChatService(base),
-		Sync:    syncService,
-		GRPC:    services.NewGRPCService(),
+		Chat:    services.NewChatService(base), // WebSocket will use this base URL
+		Sync:    syncService,                   // TCP sync service (uses UDP discovered IP)
+		GRPC:    services.NewGRPCService(),     // gRPC service (uses UDP discovered IP)
 		Admin:   services.NewAdminService(base),
-		// Pass syncService to NotifyService so it can auto-start TCP
+		// Pass syncService to NotifyService so it can auto-start UDP and TCP
 		Notify: services.NewNotifyService(syncService),
 	}
 }
