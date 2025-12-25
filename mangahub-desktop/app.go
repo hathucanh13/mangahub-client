@@ -26,7 +26,7 @@ type App struct {
 
 func NewApp() *App {
 	// Initialize with your base URL - all HTTP services will use this
-	base := "https://eb30ef8789b1.ngrok-free.app"
+	base := "https://1455073dfc18.ngrok-free.app"
 
 	syncService := services.NewSyncService()
 
