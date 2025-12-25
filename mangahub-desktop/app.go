@@ -26,7 +26,7 @@ type App struct {
 
 func NewApp() *App {
 	// Initialize with placeholder, will be updated after server discovery
-	base := "http://localhost:8080"
+	base := "https://eb30ef8789b1.ngrok-free.app"
 
 	syncService := services.NewSyncService()
 
