@@ -22,6 +22,7 @@ func (l *MangaService) ListMangas(
 	page int,
 	pageSize int,
 	genres []string,
+	sortBy string,
 ) (*models.PaginatedMangasResponse, error) {
 
 	var url string
@@ -43,6 +44,11 @@ func (l *MangaService) ListMangas(
 			page,
 			pageSize,
 		)
+	}
+
+	// Add sort_by parameter if provided
+	if sortBy != "" {
+		url = fmt.Sprintf("%s&sort_by=%s", url, sortBy)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)

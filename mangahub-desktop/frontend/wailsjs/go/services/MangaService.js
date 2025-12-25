@@ -6,8 +6,8 @@ export function ListMangaDetail(arg1) {
   return window['go']['services']['MangaService']['ListMangaDetail'](arg1);
 }
 
-export function ListMangas(arg1, arg2, arg3) {
-  return window['go']['services']['MangaService']['ListMangas'](arg1, arg2, arg3);
+export function ListMangas(arg1, arg2, arg3, arg4) {
+  return window['go']['services']['MangaService']['ListMangas'](arg1, arg2, arg3, arg4);
 }
 
 export function SearchMangas(arg1) {

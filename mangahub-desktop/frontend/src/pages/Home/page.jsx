@@ -8,11 +8,18 @@ import {
 export default function HomePage({ onSelectManga, setBackgroundMode }) {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState(""); // ranking, popularity, title
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const GENRES = ["shounen", "seinen", "comedy", "romance", "action", "fantasy", "drama", "horror", "sci-fi"];
+  const SORT_OPTIONS = [
+    { value: "", label: "Default" },
+    { value: "ranking", label: "Ranking" },
+    { value: "popularity", label: "Popularity" },
+    { value: "title", label: "Title" },
+  ];
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   useEffect(() => {
@@ -27,7 +34,7 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
     setBackgroundMode("home");
     setPage(1);
     loadMangas(1);
-  }, [selectedGenres]);
+  }, [selectedGenres, sortBy]);
 
   const [allMangas, setAllMangas] = useState({
     items: [],
@@ -38,14 +45,14 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
   });
   const [page, setPage] = useState(1);
 
-  const getCacheKey = (page, genres) => {
+  const getCacheKey = (page, genres, sort) => {
     const genresKey = genres.sort().join(",");
-    return `manga_cache_${page}_${genresKey}`;
+    return `manga_cache_${page}_${genresKey}_${sort}`;
   };
 
-  const getFromCache = (page, genres) => {
+  const getFromCache = (page, genres, sort) => {
     try {
-      const key = getCacheKey(page, genres);
+      const key = getCacheKey(page, genres, sort);
       const cached = localStorage.getItem(key);
       if (!cached) return null;
 
@@ -63,9 +70,9 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
     }
   };
 
-  const saveToCache = (page, genres, data) => {
+  const saveToCache = (page, genres, sort, data) => {
     try {
-      const key = getCacheKey(page, genres);
+      const key = getCacheKey(page, genres, sort);
       localStorage.setItem(
         key,
         JSON.stringify({
@@ -80,7 +87,7 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
 
   const loadMangas = async (page) => {
     // Try cache first
-    const cached = getFromCache(page, selectedGenres);
+    const cached = getFromCache(page, selectedGenres, sortBy);
     if (cached) {
       setAllMangas(cached);
       setPage(page);
@@ -92,7 +99,7 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
     setError(null);
 
     try {
-      const data = await ListMangas(page, allMangas.page_size, selectedGenres);
+      const data = await ListMangas(page, allMangas.page_size, selectedGenres, sortBy);
       
       // Handle null or undefined response
     if (!data.items || data.items === null || data.items === undefined || data.items.length === 0) {
@@ -107,24 +114,10 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
         return;
       }
 
-      // Handle empty items array
-      // if (!data.items || data.items.length === 0) {
-      //   setError("No manga found for the selected genres.");
-      //   setAllMangas({
-      //     items: [],
-      //     page: 1,
-      //     page_size: 20,
-      //     total_pages: 0,
-      //     total_items: 0,
-      //   });
-      //   setLoading(false);
-      //   return;
-      // }
-
       // Success - save data
       setAllMangas(data);
       setPage(page);
-      saveToCache(page, selectedGenres, data);
+      saveToCache(page, selectedGenres, sortBy, data);
     } catch (err) {
       setError(err?.message || "Failed to load manga");
       setAllMangas({
@@ -211,6 +204,7 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
               setError(null);
               setSelectedGenres([]);
               setSearchQuery("");
+              setSortBy("");
               loadMangas(1);
             }}
           >
@@ -268,6 +262,24 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
             </button>
           </form>
         </div>
+
+        <div style={styles.glassPanel}>
+          <div style={styles.sectionLabel}>Sort By</div>
+          <div style={styles.filters}>
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                style={{
+                  ...styles.genreBtn,
+                  ...(sortBy === option.value ? styles.genreBtnActive : {}),
+                }}
+                onClick={() => setSortBy(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {pagedMangas.length === 0 ? (
@@ -279,6 +291,7 @@ export default function HomePage({ onSelectManga, setBackgroundMode }) {
             onClick={() => {
               setSelectedGenres([]);
               setSearchQuery("");
+              setSortBy("");
               loadMangas(1);
             }}
           >

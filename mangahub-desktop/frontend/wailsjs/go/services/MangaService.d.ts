@@ -4,6 +4,6 @@ import {models} from '../models';
 
 export function ListMangaDetail(arg1:string):Promise<models.Manga>;
 
-export function ListMangas(arg1:number,arg2:number,arg3:Array<string>):Promise<models.PaginatedMangasResponse>;
+export function ListMangas(arg1:number,arg2:number,arg3:Array<string>,arg4:string):Promise<models.PaginatedMangasResponse>;
 
 export function SearchMangas(arg1:string):Promise<Array<models.Manga>>;
