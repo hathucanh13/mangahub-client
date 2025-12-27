@@ -28,11 +28,10 @@ func DiscoverUDPServer(timeout time.Duration) (string, error) {
 	}
 	body, _ := json.Marshal(discoveryMsg)
 
-	broadcastAddr, err := net.ResolveUDPAddr("udp", "255.255.255.255:9091")
+	broadcastAddr, err := net.ResolveUDPAddr("udp", "10.238.63.255:9091")
 	if err != nil {
 		return "", err
 	}
-
 	conn, err := net.ListenUDP("udp", nil)
 	if err != nil {
 		return "", err
