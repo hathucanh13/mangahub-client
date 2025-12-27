@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	"mangahub-desktop/backend/udpclient"
@@ -17,6 +17,8 @@ type NotifyService struct {
 	ctx         context.Context
 	syncService *SyncService
 	udpConn     *net.UDPConn
+	isRunning   bool
+	mu          sync.Mutex
 }
 
 func NewNotifyService(syncService *SyncService) *NotifyService {
@@ -30,6 +32,15 @@ func (n *NotifyService) SetContext(ctx context.Context) {
 }
 
 func (n *NotifyService) Start() error {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
+	// Prevent double-starting
+	if n.isRunning {
+		log.Println("⚠️ NotifyService already running, skipping Start()")
+		return nil
+	}
+
 	jwt, _ := utils.LoadToken()
 	if jwt == "" {
 		return nil // silent fail for UI
@@ -57,24 +68,26 @@ func (n *NotifyService) Start() error {
 			return
 		}
 		n.udpConn = conn
+		log.Println("✅ UDP listener started on port 3002")
 	}()
 
+	n.isRunning = true
 	log.Println("NotifyService started, ctx ready:", n.ctx != nil)
-	serverIP, err := utils.LoadServerIPAddr()
+
 	if err != nil {
-		fmt.Println("Failed to load server IP addr:", err)
-	}
+		log.Printf("Failed to load server IP addr: %v", err)
+	} else {
+		// 🔗 Auto-start TCP sync service
+		if n.syncService != nil {
+			go func() {
+				// Small delay to ensure UDP listener is fully started
+				time.Sleep(100 * time.Millisecond)
 
-	// 🔗 Auto-start TCP sync service
-	if n.syncService != nil {
-		go func() {
-			// Small delay to ensure UDP listener is fully started
-			time.Sleep(100 * time.Millisecond)
-
-			if err := n.syncService.StartAutoConnect(serverIP); err != nil {
-				log.Printf("Failed to auto-start TCP sync: %v\n", err)
-			}
-		}()
+				if err := n.syncService.StartAutoConnect(); err != nil {
+					log.Printf("Failed to auto-start TCP sync: %v\n", err)
+				}
+			}()
+		}
 	}
 
 	return nil
@@ -89,8 +102,12 @@ func (n *NotifyService) Subscribe(mangaID string) error {
 
 // Stop closes the UDP listener connection
 func (n *NotifyService) Stop() {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+
 	if n.udpConn != nil {
 		n.udpConn.Close()
 		log.Println("UDP listener closed")
 	}
+	n.isRunning = false
 }

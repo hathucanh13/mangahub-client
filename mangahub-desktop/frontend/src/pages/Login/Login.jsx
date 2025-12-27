@@ -30,6 +30,7 @@ export default function LoginPage({ onLogin }) {
         await Login(username, password);
         alert("✅ Logged in successfully");
         onLogin();
+        localStorage.setItem('token', data.token);
       } else {
         await Signup(username, password);
         alert("🎉 Account created! You can now log in.");

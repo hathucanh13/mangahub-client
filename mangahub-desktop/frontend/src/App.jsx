@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import LoginPage from "./pages/Login/Login";
 import LibraryPage from "./pages/Library/page";
-import { Start } from "../wailsjs/go/services/NotifyService";
 import { EventsOn } from "../wailsjs/runtime/runtime";
 import { showToast } from "./utils/toast";
 import Navbar from "./components/Navbar";
+import { Stop as StopNotify } from "../wailsjs/go/services/NotifyService";
+import { Stop as StopSync } from "../wailsjs/go/services/SyncService";
 
 import HomePage from "./pages/Home/page";
 import MangaDetailPage from "./pages/MangaDetail/page";
@@ -34,16 +35,24 @@ function App() {
     setTab("chat");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Stop UDP and TCP connections
+    try {
+      await StopNotify();
+      await StopSync();
+      console.log("UDP and TCP connections closed");
+    } catch (err) {
+      console.error("Error closing connections:", err);
+    }
+    
     setLoggedIn(false);
     setTab("home");
     showToast("👋 Logged out successfully");
   };
 
   useEffect(() => {
-    Start().then(() => {
-      console.log("NotifyService started");
-    });
+    // NotifyService will be started automatically after login by backend
+    // No need to call Start() here anymore
 
     // Listen for manga notifications from UDP
     const offManga = EventsOn("notify:manga", (n) => {

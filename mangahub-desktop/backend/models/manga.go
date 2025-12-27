@@ -11,6 +11,8 @@ type Manga struct {
 	Status        string   `json:"status" db:"status"`
 	CoverURL      string   `json:"cover_url" db:"cover_url"`
 	Description   string   `json:"description" db:"description"`
+	Popularity    *int     `json:"popularity,omitempty" db:"popularity"`
+	Ranking       *int     `json:"ranking,omitempty" db:"ranking"`
 }
 
 type MangaPage struct {

@@ -14,6 +14,7 @@ import (
 // App struct
 type App struct {
 	ctx     context.Context
+	base    string
 	Auth    *services.AuthService
 	Library *services.LibraryService
 	Notify  *services.NotifyService
@@ -30,7 +31,8 @@ func NewApp() *App {
 
 	syncService := services.NewSyncService()
 
-	return &App{
+	app := &App{
+		base:    base,
 		Auth:    services.NewAuthService(base),
 		Library: services.NewLibraryService(base),
 		Manga:   services.NewMangaService(base),
@@ -41,6 +43,10 @@ func NewApp() *App {
 		// Pass syncService to NotifyService so it can auto-start TCP
 		Notify: services.NewNotifyService(syncService),
 	}
+	// Set callback to initialize services after login
+	app.Auth.OnLoginSuccess = app.InitializeAfterLogin
+
+	return app
 }
 
 // InitializeServices discovers the server and updates all service base URLs
@@ -50,11 +56,23 @@ func (a *App) InitializeServices() error {
 	// Try to discover server IP
 	serverIP, err := a.DiscoverServer()
 	if err != nil {
-		log.Printf("⚠️ Server discovery failed, using localhost: %v", err)
-		serverIP = "localhost"
+		log.Printf("⚠️ Server discovery failed, using baseURL: %v", err)
+		// Fall back to the original base URL (ngrok or configured URL)
+		a.Auth.BaseURL = a.base
+		a.Library.BaseURL = a.base
+		a.Manga.BaseURL = a.base
+		a.Admin.BaseURL = a.base
+		// For websocket, replace http with ws
+		wsBase := a.base
+		if len(wsBase) > 7 && wsBase[:4] == "http" {
+			wsBase = "ws" + wsBase[4:]
+		}
+		a.Chat.SetBaseURL(wsBase)
+		log.Printf("📍 Using fallback URL: %s", a.base)
+		return nil
 	}
 
-	log.Printf("✅ Using server IP: %s", serverIP)
+	log.Printf("✅ Discovered server IP: %s", serverIP)
 
 	// Update all HTTP services' BaseURL with discovered IP
 	httpBaseURL := fmt.Sprintf("http://%s:8080", serverIP)
@@ -64,7 +82,10 @@ func (a *App) InitializeServices() error {
 	a.Library.BaseURL = httpBaseURL
 	a.Manga.BaseURL = httpBaseURL
 	a.Admin.BaseURL = httpBaseURL
+	a.Sync.SetBaseURL(serverIP)
 	a.Chat.SetBaseURL(wsBaseURL)
+
+	log.Printf("📍 Updated service URLs to: %s", httpBaseURL)
 
 	return nil
 }
@@ -102,13 +123,28 @@ func (a *App) startup(ctx context.Context) {
 	a.Chat.SetContext(ctx)
 	a.Sync.SetContext(ctx)
 
+	// Don't discover server on startup - wait until after login
+	log.Println("All service contexts initialized")
+	utils.LogInfo("App started successfully - waiting for login to discover server")
+}
+
+// InitializeAfterLogin discovers the server and starts UDP/TCP connections after successful login
+func (a *App) InitializeAfterLogin() error {
+	log.Println("🔐 User logged in - initializing services...")
+
 	// Discover server and initialize services with correct IP
 	if err := a.InitializeServices(); err != nil {
 		log.Printf("Failed to initialize services: %v", err)
+		return err
 	}
 
-	log.Println("All service contexts initialized")
-	utils.LogInfo("App started successfully")
+	// Start UDP notifications and TCP sync after services are initialized
+	if err := a.Notify.Start(); err != nil {
+		log.Printf("Failed to start NotifyService: %v", err)
+	}
+
+	log.Println("✅ Services initialized after login")
+	return nil
 }
 
 func (a *App) shutdown(ctx context.Context) {

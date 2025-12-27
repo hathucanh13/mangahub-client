@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ListMangaDetail } from "../../../wailsjs/go/services/MangaService";
 import { Subscribe } from "../../../wailsjs/go/services/NotifyService";
+import { GetCurrentUsername } from "../../../wailsjs/go/services/AuthService";
 
 export default function MangaDetailPage({
   mangaId,
@@ -26,12 +27,24 @@ export default function MangaDetailPage({
 
   // Load subscription state from cache
   useEffect(() => {
-    if (mangaId) {
-      const cached = localStorage.getItem(`manga_sub_${mangaId}`);
-      if (cached === "true") {
-        setSubscribed(true);
+    const loadSubscriptionState = async () => {
+      if (mangaId) {
+        try {
+          const username = await GetCurrentUsername();
+          const cached = localStorage.getItem(`manga_sub_${username}_${mangaId}`);
+          if (cached === "true") {
+            setSubscribed(true);
+          } else {
+            setSubscribed(false);
+          }
+        } catch (err) {
+          console.error("Failed to load subscription state:", err);
+          setSubscribed(false);
+        }
       }
-    }
+    };
+    
+    loadSubscriptionState();
   }, [mangaId]);
 
   const getFromCache = (id) => {
@@ -119,9 +132,15 @@ export default function MangaDetailPage({
 
     setSubscribing(true);
     try {
+      // Get current username
+      const username = await GetCurrentUsername();
+      
       await Subscribe(manga.id);
       setSubscribed(true);
-      localStorage.setItem(`manga_sub_${manga.id}`, "true");
+      
+      // Cache subscription status with username to prevent cross-user issues
+      localStorage.setItem(`manga_sub_${username}_${manga.id}`, "true");
+      
       alert(
         `✅ Subscribed to ${manga.title}!\nYou'll receive notifications for new chapters.`
       );
@@ -173,6 +192,25 @@ export default function MangaDetailPage({
               <span style={styles.metaLabel}>Year:</span>
               <span style={styles.metaValue}>{manga.published_year}</span>
             </div>
+
+            <div style={styles.metaItem}>
+              <span style={styles.metaLabel}>Chapters:</span>
+              <span style={styles.metaValue}>{manga.chapter_count || 'N/A'}</span>
+            </div>
+
+            {manga.popularity && (
+              <div style={styles.metaItem}>
+                <span style={styles.metaLabel}>Popularity:</span>
+                <span style={styles.metaValue}>#{manga.popularity}</span>
+              </div>
+            )}
+
+            {manga.ranking && (
+              <div style={styles.metaItem}>
+                <span style={styles.metaLabel}>Ranking:</span>
+                <span style={styles.metaValue}>#{manga.ranking}</span>
+              </div>
+            )}
           </div>
 
           <div style={styles.genresWrapper}>

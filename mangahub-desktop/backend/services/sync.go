@@ -19,6 +19,7 @@ type SyncService struct {
 	mu         sync.Mutex
 	cancelFunc context.CancelFunc
 	deviceID   string
+	baseURL    string
 }
 
 type ProgressBroadcast struct {
@@ -42,13 +43,19 @@ func NewSyncService() *SyncService {
 func (s *SyncService) SetContext(ctx context.Context) {
 	s.ctx = ctx
 }
+func (s *SyncService) SetBaseURL(baseURL string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.baseURL = baseURL
+	utils.LogInfo(fmt.Sprintf("Sync service updated to use: %s", baseURL))
+}
 
 func generateDeviceID() string {
 	return fmt.Sprintf("device-%d", time.Now().UnixNano()%1000000)
 }
 
 // StartAutoConnect automatically starts after UDP discovers server IP
-func (s *SyncService) StartAutoConnect(serverIP string) error {
+func (s *SyncService) StartAutoConnect() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -67,7 +74,7 @@ func (s *SyncService) StartAutoConnect(serverIP string) error {
 	s.cancelFunc = cancel
 
 	// Connect to TCP server on port 9090
-	conn, err := net.DialTimeout("tcp", serverIP+":9090", 10*time.Second)
+	conn, err := net.DialTimeout("tcp", s.baseURL+":9090", 10*time.Second)
 	if err != nil {
 		cancel()
 		fmt.Printf("Failed to connect to sync server: %v\n", err)
@@ -91,7 +98,7 @@ func (s *SyncService) StartAutoConnect(serverIP string) error {
 		return err
 	}
 
-	fmt.Printf("TCP sync connected to %s with device ID: %s\n", serverIP, s.deviceID)
+	fmt.Printf("TCP sync connected to %s with device ID: %s\n", s.baseURL, s.deviceID)
 
 	// Start listening for broadcasts in background
 	go s.listen(ctx)

@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"mangahub-desktop/backend/utils"
 )
 
 type AuthService struct {
-	BaseURL string
+	BaseURL        string
+	OnLoginSuccess func() error // Callback to initialize services after login
 }
 
 func NewAuthService(baseURL string) *AuthService {
@@ -48,7 +50,19 @@ func (a *AuthService) Login(username, password string) error {
 		return err
 	}
 
-	return utils.SaveToken(result.Token)
+	if err := utils.SaveToken(result.Token); err != nil {
+		return err
+	}
+
+	// Initialize services after successful login
+	if a.OnLoginSuccess != nil {
+		if err := a.OnLoginSuccess(); err != nil {
+			log.Printf("Failed to initialize services after login: %v", err)
+			// Don't fail login if service initialization fails
+		}
+	}
+
+	return nil
 }
 func (a *AuthService) Signup(username, password string) error {
 	req := map[string]string{

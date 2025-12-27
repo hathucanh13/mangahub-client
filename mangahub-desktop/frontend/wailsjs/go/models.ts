@@ -11,6 +11,8 @@ export namespace models {
 	    status: string;
 	    cover_url: string;
 	    description: string;
+	    popularity?: number;
+	    ranking?: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Manga(source);
@@ -28,6 +30,8 @@ export namespace models {
 	        this.status = source["status"];
 	        this.cover_url = source["cover_url"];
 	        this.description = source["description"];
+	        this.popularity = source["popularity"];
+	        this.ranking = source["ranking"];
 	    }
 	}
 	export class PaginatedMangasResponse {
