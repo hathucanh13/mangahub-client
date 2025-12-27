@@ -40,7 +40,7 @@ wails dev
 
 If you need to use dev mode for quick frontend changes, be aware of these limitations and restart the app frequently.
 
-## Building for Production
+## Building for Production (THERE'S ALREADY ONE IN THE build/bin DIRECTORY, YOU CAN RUN IT DIRECTLY)
 
 To build a redistributable, production mode package:
 
