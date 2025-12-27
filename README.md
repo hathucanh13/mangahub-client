@@ -52,7 +52,7 @@ wails dev
 
 # Note: This mode has known issues:
 # - Opens duplicate UDP listeners on port 3002
-# - Can cause conflicts with TCP sync connections
+# - Can cause conflicts with TCP sync connections & websocket chat
 # - May show incorrect subscription states
 ```
 

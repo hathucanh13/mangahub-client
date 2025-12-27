@@ -227,7 +227,6 @@ export default function LibraryPage({
       <Section
         title="Completed"
         items={library?.completed}
-        showChapter
         progressHistory={progressHistory}
         onUpdate={updateStatus}
         onRemove={removeManga}
