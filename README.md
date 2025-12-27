@@ -7,6 +7,24 @@ This is the official desktop client for MangaHub, built with Wails (Go + React).
 You can configure the project by editing `wails.json`. More information about the project settings can be found
 here: https://wails.io/docs/reference/project-config
 
+## Configuration
+
+### Server URL Configuration
+
+By default, the app discovers the server via UDP broadcast on the local network. If you need to host the server elsewhere (e.g., using ngrok for remote access), you can change the fallback base URL:
+
+1. Open `app.go`
+2. Find the `NewApp()` function (around line 29)
+3. Change the `base` variable to your server URL:
+   ```go
+   base := "https://your-ngrok-url.ngrok-free.app"
+   // or
+   base := "http://your-server-ip:8080"
+   ```
+4. Rebuild the app with `wails build`
+
+The app will first attempt UDP discovery on the local network. If discovery fails, it will fall back to the configured `base` URL.
+
 ## Development
 
 ### Running the App
@@ -15,7 +33,7 @@ here: https://wails.io/docs/reference/project-config
 
 The dev mode (`wails dev`) opens 2 UDP/TCP connections which can cause conflicts and unexpected behavior with the notification and sync services.
 
-#### Option 1: Build Mode (Recommended)
+#### Option 1: Build Mode (Recommended). There's already one latest build for Windows ready in the build/bin directory
 ```bash
 # Build the application
 wails build
@@ -40,7 +58,8 @@ wails dev
 
 If you need to use dev mode for quick frontend changes, be aware of these limitations and restart the app frequently.
 
-## Building for Production (THERE'S ALREADY ONE IN THE build/bin DIRECTORY, YOU CAN RUN IT DIRECTLY)
+## Building for Production 
+#### (THERE'S ALREADY ONE IN THE build/bin DIRECTORY, YOU CAN RUN IT DIRECTLY) 
 
 To build a redistributable, production mode package:
 
